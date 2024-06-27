@@ -1,30 +1,36 @@
 ---
-- name: Create {{ backup_type }} for {{ inventory_hostname }}
-  delegate_to: localhost
-  register: response
-  uri:
-    url: "https://api.hetzner.cloud/v1/servers/{{ hostvars[inventory_hostname]['id'] }}/actions/create_image"
-    method: POST
-    headers:
-      Authorization: "Bearer {{ hcloud_token }}"
-      Content-Type: "application/json"
-    body: '{"description":"{{ inventory_hostname }} {{ backup_type }} created by ansible","labels":{"author":"ansible", "host": "{{ inventory_hostname }}"},"type":"{{ backup_type }}"}'
-    return_content: yes
-    status_code: 201
-    body_format: json
+- name: Validate variables
+  include_tasks: validate.yml
 
-- name: Wait until {{ backup_type }} is finished for {{ inventory_hostname }}
-  delegate_to: {{ delegation }}
-  register: response
-  uri:
-    url: "https://api.hetzner.cloud/v1/images/{{ response.json.image.id }}/actions/{{ response.json.action.id }}"
-    method: GET
-    headers:
-      Authorization: "Bearer {{ hcloud_token }}"
-    return_content: yes
-    status_code: 200
-    body_format: json
-  until: response.json.action.progress == 100
-  retries: "{{ retries }}"
-  delay: "{{ delay }}"
-...
+#- name: Create {{ backup_type }} for {{ inventory_hostname }}
+#  delegate_to: localhost
+#  register: response
+#  uri:
+#    url: "https://api.hetzner.cloud/v1/servers/{{ hostvars[inventory_hostname]['id'] }}/actions/create_image"
+#    method: POST
+#    headers:
+#      Authorization: "Bearer {{ hcloud_token }}"
+#      Content-Type: "application/json"
+#    body: '{"description":"{{ inventory_hostname }}-{{ now(fmt="%Y-%m-%d-%H:%M:%S") }}","labels":{"created_by":"ansible", "host": "{{ inventory_hostname }}"},"type":"{{ backup_type }}"}'
+#    return_content: yes
+#    status_code: 201
+#    body_format: json
+#
+#- name: Wait {{ delay }}s until {{ backup_type }} is finished for {{ inventory_hostname }}
+#  delegate_to: "{{ delegation }}"
+#  register: response
+#  uri:
+#    url: "https://api.hetzner.cloud/v1/images/{{ response.json.image.id }}/actions/{{ response.json.action.id }}"
+#    method: GET
+#    headers:
+#      Authorization: "Bearer {{ hcloud_token }}"
+#    return_content: yes
+#    status_code: 200
+#    body_format: json
+#  until: response.json.action.progress == 100
+#  retries: "{{ retries }}"
+#  delay: "{{ delay }}"
+
+- name: Rotate snapshots for {{ inventory_hostname }}
+  when: backup_type == "snapshot" and rotate_snapshots == true
+  include_tasks: rotate-snapshots.yml

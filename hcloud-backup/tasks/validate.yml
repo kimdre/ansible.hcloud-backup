@@ -1,0 +1,24 @@
+---
+# Validate variable inputs
+- name: Validate backup type
+  assert:
+    that:
+      - backup_type == "snapshot" or backup_type == "backup"
+    fail_msg: "Backup type must be either 'snapshot' or 'backup'."
+
+- name: Validate hcloud_token
+  assert:
+    that:
+      - hcloud_token is defined
+      - hcloud_token is string
+      - hcloud_token != ""
+    fail_msg: "Variable hcloud_token must be a string and not empty."
+
+- name: Validate number of snapshots to keep
+  when: backup_type == "snapshot" and rotate_snapshots == true
+  assert:
+    that:
+      - keep_snapshots is integer
+      - keep_snapshots >= 1
+      - keep_snapshots <= 40
+    fail_msg: "Number of snapshots to keep must be between 1 and 40."

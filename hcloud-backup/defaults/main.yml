@@ -1,12 +1,24 @@
 ---
-# type for the backup, 'snapshot' is generally cheaper and also 'backup' needs to be enabled first for the server
+# Type for the backup, can be 'snapshot' or 'backup'
+# - 'snapshot' is generally cheaper and there is no limit on the number of snapshots that can be created
+# - 'backup' needs to be enabled first for the server and only 7 backups can be created per server
 backup_type: 'snapshot'
 
-# number of retries for the backup creation
+# Rotate snapshots, if set to true, the oldest snapshot will be deleted
+# when the number of snapshots exceeds keep_snapshots.
+# Only used when backup_type is set to 'snapshot'
+rotate_snapshots: true
+
+# Number of snapshots to keep, older snapshots will be deleted
+# when rotate_snapshots is set to true.
+# Only used when backup_type is set to 'snapshot'
+keep_snapshots: 5
+
+# Number of retries for the backup creation
 retries: 40
 
-# delay between retries for the backup creation
+# Delay in seconds between retries for the backup creation
 delay: 15
 
-# host to trigger the backup/snapshot creation from
+# Host to trigger the backup/snapshot creation from
 delegation: localhost

@@ -1,2 +1,2 @@
 ---
-hcloud_token: "your-hcloud-token"
+hcloud_token: "{{ vault_hcloud_token }}"
