@@ -1,0 +1,19 @@
+---
+name: Validate YAML Files
+on:
+  workflow_call:
+
+jobs:
+  linter:
+    name: Validate Files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint Yaml Files
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          config_data: |
+            extends: default
+            rules:
+              line-length:
+                max: 120

@@ -1,0 +1,29 @@
+---
+galaxy_info:
+  author: Kim Oliver Drechsel
+  description: Ansible role for Hetzner Cloud to create backups and snapshot of your servers
+  company: Maki IT
+  license: Apache-2.0
+
+  min_ansible_version: 2.1
+
+  platforms:
+    - name: Fedora
+      versions:
+        - all
+    - name: Ubuntu
+      versions:
+        - all
+    - name: Debian
+      versions:
+        - all
+    - name: CentOS
+      versions:
+        - all
+
+  galaxy_tags:
+    - hcloud
+    - hetzner
+    - backup
+    - snapshot
+    - server
