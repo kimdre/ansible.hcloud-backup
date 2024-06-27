@@ -1,0 +1,12 @@
+---
+# type for the backup, 'snapshot' is generally cheaper and also 'backup' needs to be enabled first for the server
+backup_type: 'snapshot'
+
+# number of retries for the backup creation
+retries: 40
+
+# delay between retries for the backup creation
+delay: 15
+
+# host to trigger the backup/snapshot creation from
+delegation: localhost
