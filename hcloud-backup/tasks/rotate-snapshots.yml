@@ -1,58 +1,26 @@
 ---
-- name: Get snapshot count for {{ inventory_hostname }}
+- name: 'Get all snapshots with labels: "{{ label_selector }}"'
   delegate_to: "{{ delegation }}"
   register: response
-  uri:
-    url: "https://api.hetzner.cloud/v1/images?type=snapshot&status=available&bound_to={{ hostvars[inventory_hostname]['id'] }}"
-    method: GET
-    headers:
-      Authorization: "Bearer {{ hcloud_token }}"
-    return_content: yes
-    status_code: 200
-    body_format: json
+  hetzner.hcloud.hcloud_image_info:
+    api_token: "{{ hcloud_token }}"
+    type: snapshot
+    label_selector: "{{ label_selector }}"
+  failed_when: response.hcloud_image_info | length == 0
 
-- name: Read snapshot count for {{ inventory_hostname }}
-  set_fact:
-    snapshot_count: "{{ response.json.meta.pagination.total_entries }}"
-
-# FIXME: register response variable has no correct data
-- name: Get all snapshots for {{ inventory_hostname }}
+- name: Get snapshots to delete for {{ inventory_hostname }}
   delegate_to: "{{ delegation }}"
-  loop: "{{ range(1, (snapshot_count|int // 50) + 2) }}"
-  register: response
-  loop_control:
-    loop_var: page
-  uri:
-    url: "https://api.hetzner.cloud/v1/images?type=snapshot&status=available&bound_to={{ hostvars[inventory_hostname]['id'] }}&page={{ page }}"
-    method: GET
-    headers:
-      Authorization: "Bearer {{ hcloud_token }}"
-    return_content: yes
-    status_code: 200
-    body_format: json
-
-- name: Print response for {{ inventory_hostname }}
-  debug:
-    var: response
-
-- name: Read snapshots for {{ inventory_hostname }}
   set_fact:
-    snapshots: "{{ response.json.images }}"
+    delete_list: "{{ response.hcloud_image_info[0:response.hcloud_image_info | length - keep_snapshots | int] }}"
+  when: response.hcloud_image_info | length - keep_snapshots | int > 0
 
-- name: Calculate snapshots to delete for {{ inventory_hostname }}
-  set_fact:
-    snapshots_to_delete: "{{ snapshot_count - keep_snapshots }}"
-  when: snapshot_count > keep_snapshots
-
-- name: Delete {{ snapshots_to_delete }} snapshots for {{ inventory_hostname }}
+- name: 'Delete {{ delete_list | length }} old snapshots for {{ inventory_hostname }}'
   delegate_to: "{{ delegation }}"
-  when: snapshot_count > keep_snapshots
-  loop: "{{ query('slice', snapshots, 0, snapshots_to_delete) }}"
-  loop_control:
-    loop_var: snapshot
+  when: delete_list | length > 0
+  loop: "{{ delete_list }}"
   uri:
-    url: "https://api.hetzner.cloud/v1/images/{{ snapshot.id }}"
+    url: "https://api.hetzner.cloud/v1/images/{{ item.id }}"
     method: DELETE
-    headers:
-    Authorization: "Bearer {{ hcloud_token }}"
     status_code: 204
+    headers:
+      Authorization: "Bearer {{ hcloud_token }}"

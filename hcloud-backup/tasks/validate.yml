@@ -1,13 +1,17 @@
 ---
 # Validate variable inputs
 - name: Validate backup type
+  delegate_to: "{{ delegation }}"
   assert:
+    quiet: yes
     that:
       - backup_type == "snapshot" or backup_type == "backup"
     fail_msg: "Backup type must be either 'snapshot' or 'backup'."
 
 - name: Validate hcloud_token
+  delegate_to: "{{ delegation }}"
   assert:
+    quiet: yes
     that:
       - hcloud_token is defined
       - hcloud_token is string
@@ -15,10 +19,61 @@
     fail_msg: "Variable hcloud_token must be a string and not empty."
 
 - name: Validate number of snapshots to keep
+  delegate_to: "{{ delegation }}"
   when: backup_type == "snapshot" and rotate_snapshots == true
   assert:
+    quiet: yes
     that:
       - keep_snapshots is integer
       - keep_snapshots >= 1
       - keep_snapshots <= 40
     fail_msg: "Number of snapshots to keep must be between 1 and 40."
+
+- name: Validate retries and delay
+  delegate_to: "{{ delegation }}"
+  assert:
+    quiet: yes
+    that:
+      - backup_check_retries is integer
+      - backup_check_retries >= 0
+      - backup_check_delay is integer
+      - backup_check_delay >= 0
+    fail_msg: "Retries and delay must be positive integers."
+
+- name: Validate backup labels
+  delegate_to: "{{ delegation }}"
+  loop: "{{ backup_labels | dict2items }}"
+  assert:
+    quiet: yes
+    that:
+      - item.key is string
+      - item.value is string
+      - item.key != ""
+      - item.key is match("^[a-zA-Z0-9_\-\.]+$")
+      - item.value is match("^[a-zA-Z0-9_\-\.]+$")
+      - item.key | length < 64
+      - item.value | length < 64
+    fail_msg: "Label key or value not in correct format."
+
+- name: Validate label selector
+  delegate_to: "{{ delegation }}"
+  when: backup_type == "snapshot"
+  assert:
+    quiet: yes
+    that:
+    - label_selector is string
+    # Regex for label selector format: key=value or key, separate multiple labels with a comma
+    - label_selector is match("^([a-zA-Z0-9_\-\.]+=[a-zA-Z0-9_\-\.]+)(,[a-zA-Z0-9_\-\.]+=[a-zA-Z0-9_\-\.]+)*$")
+    fail_msg: "Label selector not in correct format."
+
+- name: Check if labels in label_selector are in backup_labels
+  delegate_to: "{{ delegation }}"
+  when: backup_type == "snapshot"
+  assert:
+    quiet: yes
+    that:
+      - label_selector.split(",") | map("split", "=") | map("first") | list | difference(backup_labels.keys() | list) == []
+      - label_selector.split(",") | map("split", "=") | map("first") | list | difference(backup_labels.keys() | list) | length == 0
+      - label_selector.split(",") | map("split", "=") | map("last") | list | difference(backup_labels.values() | list) == []
+      - label_selector.split(",") | map("split", "=") | map("last") | list | difference(backup_labels.values() | list) | length == 0
+    fail_msg: "label_selector contains labels that are not in backup_labels variable."

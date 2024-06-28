@@ -4,6 +4,21 @@
 # - 'backup' needs to be enabled first for the server and only 7 backups can be created per server
 backup_type: 'snapshot'
 
+# Description of the snapshot/backup
+backup_description: "{{ inventory_hostname }} {{ now(fmt='%Y-%m-%d-%H:%M:%S') }}"
+
+# List of labels of the snapshot/backup
+# Format: key: "value"
+backup_labels:
+  created_by: "ansible.hcloud-backup"
+  host: "{{ inventory_hostname }}"
+  created_at: "{{ now(fmt='%Y-%m-%d_%H-%M-%S') }}"
+
+# Labels to identify a snapshots for rotation, should overlap with backup_labels
+# Only used when backup_type is set to 'snapshot'
+# Format: 'key=value' or 'key', separate multiple labels with a comma
+label_selector: "created_by=ansible.hcloud-backup,host={{ inventory_hostname }}"
+
 # Rotate snapshots, if set to true, the oldest snapshot will be deleted
 # when the number of snapshots exceeds keep_snapshots.
 # Only used when backup_type is set to 'snapshot'
@@ -15,10 +30,15 @@ rotate_snapshots: true
 keep_snapshots: 5
 
 # Number of retries for the backup creation
-retries: 40
+backup_check_retries: 40
 
 # Delay in seconds between retries for the backup creation
-delay: 15
+backup_check_delay: 15
 
 # Host to trigger the backup/snapshot creation from
-delegation: localhost
+delegation: "{{ inventory_hostname }}"
+
+###
+# Do not edit/overwrite variables below this line
+delete_list: []
+label_regex: '[a-zA-Z0-9_\-\.]+'
