@@ -42,3 +42,4 @@ delegation: "{{ inventory_hostname }}"
 # Do not edit/overwrite variables below this line
 delete_list: [ ]
 label_regex: '[a-zA-Z0-9_\-\.]+'
+api_token: "{{ lookup('env', 'HCLOUD_TOKEN', default=Undefined) }}"
