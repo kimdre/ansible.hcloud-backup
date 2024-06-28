@@ -12,6 +12,11 @@ Ansible role to create and rotate backups and snapshots of servers in Hetzner Cl
 
 Hetzner Cloud API token.
 
+**Example**
+```yaml
+hcloud_token: "your-hcloud-token"
+```
+
 Can also be set as an environment variable `HCLOUD_TOKEN`.
 
 ## Default Variables
