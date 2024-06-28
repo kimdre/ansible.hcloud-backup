@@ -2,6 +2,18 @@
 
 Ansible role to create and rotate backups and snapshots of servers in Hetzner Cloud.
 
+<!-- TOC -->
+* [hcloud-backup](#hcloud-backup)
+  * [Requirements](#requirements)
+  * [Role Variables](#role-variables)
+    * [hcloud_token](#hcloud_token)
+  * [Default Variables](#default-variables)
+  * [Example Playbook](#example-playbook)
+  * [Dependencies](#dependencies)
+  * [License](#license)
+  * [Author](#author)
+<!-- TOC -->
+
 ## Requirements
 
 - Ansible 2.15 or later
