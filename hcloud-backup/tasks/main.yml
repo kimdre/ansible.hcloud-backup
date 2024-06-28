@@ -9,7 +9,7 @@
     url: "https://api.hetzner.cloud/v1/servers/{{ hostvars[inventory_hostname]['id'] }}/actions/create_image"
     method: POST
     headers:
-      Authorization: "Bearer {{ hcloud_token }}"
+      Authorization: "Bearer {{ api_token }}"
       Content-Type: "application/json"
     body: '{"description":"{{ backup_description }}","labels":{{ backup_labels | to_json }},"type":"{{ backup_type }}"}'
     return_content: yes
@@ -23,7 +23,7 @@
     url: "https://api.hetzner.cloud/v1/images/{{ response.json.image.id }}/actions/{{ response.json.action.id }}"
     method: GET
     headers:
-      Authorization: "Bearer {{ hcloud_token }}"
+      Authorization: "Bearer {{ api_token }}"
     return_content: yes
     status_code: 200
     body_format: json

@@ -8,15 +8,15 @@
       - backup_type == "snapshot" or backup_type == "backup"
     fail_msg: "Backup type must be either 'snapshot' or 'backup'."
 
-- name: Validate hcloud_token
+- name: Validate api_token
   delegate_to: "{{ delegation }}"
   assert:
     quiet: yes
     that:
-      - hcloud_token is defined
-      - hcloud_token is string
-      - hcloud_token != ""
-    fail_msg: "Variable hcloud_token must be a string and not empty."
+      - api_token is defined
+      - api_token is string
+      - api_token != ""
+    fail_msg: "Variable api_token must be a string and not empty."
 
 - name: Validate number of snapshots to keep
   delegate_to: "{{ delegation }}"
@@ -66,7 +66,7 @@
       - label_selector is match("^([a-zA-Z0-9_\-\.]+=[a-zA-Z0-9_\-\.]+)(,[a-zA-Z0-9_\-\.]+=[a-zA-Z0-9_\-\.]+)*$")
     fail_msg: "Label selector not in correct format."
 
-- name: Check if labels in label_selector are in backup_labels
+- name: Validate if labels in label_selector are also in backup_labels
   delegate_to: "{{ delegation }}"
   when: backup_type == "snapshot"
   assert:
