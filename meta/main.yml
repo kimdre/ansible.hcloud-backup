@@ -7,9 +7,12 @@ galaxy_info:
   company: Maki IT
   license: Apache-2.0
   min_ansible_version: 2.15
-
-  dependencies:
-    - role: hetzner.hcloud
+  galaxy_tags:
+    - hcloud
+    - hetzner
+    - backup
+    - snapshot
+    - server
 
   platforms:
     - name: Fedora
@@ -25,9 +28,5 @@ galaxy_info:
       versions:
         - all
 
-  galaxy_tags:
-    - hcloud
-    - hetzner
-    - backup
-    - snapshot
-    - server
+dependencies:
+  - role: hetzner.hcloud
