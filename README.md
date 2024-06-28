@@ -95,7 +95,7 @@ and [`rotate_snapshots`](#rotate_snapshots) is set to `true`.
 keep_snapshots: 5
 ```
 
-#### backup_check_retries
+### backup_check_retries
 
 Number of retries for the backup creation check.
 
@@ -105,7 +105,7 @@ Number of retries for the backup creation check.
 backup_check_retries: 40
 ```
 
-#### backup_check_delay
+### backup_check_delay
 
 Delay in seconds between retries for the backup creation check.
 
