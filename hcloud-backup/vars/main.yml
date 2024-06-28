@@ -1,3 +1,0 @@
----
-hcloud_token: "{{ vault_hcloud_token }}"
-keep_snapshots: 3

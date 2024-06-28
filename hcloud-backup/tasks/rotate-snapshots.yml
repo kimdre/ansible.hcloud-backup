@@ -3,7 +3,7 @@
   delegate_to: "{{ delegation }}"
   register: response
   hetzner.hcloud.hcloud_image_info:
-    api_token: "{{ hcloud_token }}"
+    api_token: "{{ api_token }}"
     type: snapshot
     label_selector: "{{ label_selector }}"
   failed_when: response.hcloud_image_info | length == 0
@@ -23,4 +23,4 @@
     method: DELETE
     status_code: 204
     headers:
-      Authorization: "Bearer {{ hcloud_token }}"
+      Authorization: "Bearer {{ api_token }}"
