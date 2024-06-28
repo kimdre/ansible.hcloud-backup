@@ -28,11 +28,11 @@ Hetzner Cloud API token.
 hcloud_token: "your-hcloud-token"
 ```
 
-Can also be set as an environment variable `HCLOUD_TOKEN`.
+Can also be set as an environment variable `HCLOUD_TOKEN`
 
 ## Default Variables
 
-See [hcloud-backup/defaults/main.yml](defaults/main.yml) for all available variables.
+See [hcloud-backup/defaults/main.yml](https://github.com/kimdre/ansible.hcloud-backup/blob/main/defaults/main.yml) for all available variables.
 
 ### backup_type
 
@@ -144,20 +144,14 @@ delegation: "{{ inventory_hostname }}"
 ## Example Playbook
 
 ```yaml
-- hosts: all
+- name: "Create snapshot of host"
+  hosts: '{{ target | default("all") }}'
   roles:
-    - role: hcloud-backup
+    - role: kimdre.hcloud-backup
       vars:
         hcloud_token: "your-hcloud-token"
         backup_type: "snapshot"
-        backup_description: "Backup of {{ inventory_hostname }}"
-        backup_labels:
-          created_by: "ansible.hcloud-backup"
-          host: "{{ inventory_hostname }}"
-          created_at: "{{ now(fmt='%Y-%m-%d_%H-%M-%S') }}"
-        label_selector: "created_by=ansible.hcloud-backup,host={{ inventory_hostname }}"
-        rotate_snapshots: true
-        keep_snapshots: 5
+        keep_snapshots: 8
 ```
 
 ## Dependencies
