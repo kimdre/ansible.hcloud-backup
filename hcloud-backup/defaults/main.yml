@@ -29,13 +29,13 @@ rotate_snapshots: true
 # Only used when backup_type is set to 'snapshot'
 keep_snapshots: 5
 
-# Number of retries for the backup creation
+# Delay in seconds between retries for the backup creation check
 backup_check_retries: 40
 
 # Delay in seconds between retries for the backup creation
 backup_check_delay: 15
 
-# Host to trigger the backup/snapshot creation from
+# Host to run the role tasks from
 delegation: "{{ inventory_hostname }}"
 
 ###
