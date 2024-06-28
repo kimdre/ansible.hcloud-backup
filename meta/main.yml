@@ -1,6 +1,6 @@
 ---
 galaxy_info:
-  namespace: maki-it
+  namespace: kimdre
   role_name: hcloud-backup
   author: Kim Oliver Drechsel
   description: Ansible role for Hetzner Cloud to create and rotate backups and snapshots of your servers
