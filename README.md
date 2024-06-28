@@ -32,7 +32,7 @@ Can also be set as an environment variable `HCLOUD_TOKEN`.
 
 ## Default Variables
 
-See [hcloud-backup/defaults/main.yml](hcloud-backup/defaults/main.yml) for all available variables.
+See [hcloud-backup/defaults/main.yml](defaults/main.yml) for all available variables.
 
 ### backup_type
 
