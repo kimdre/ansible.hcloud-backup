@@ -40,5 +40,5 @@ delegation: "{{ inventory_hostname }}"
 
 ###
 # Do not edit/overwrite variables below this line
-delete_list: []
+delete_list: [ ]
 label_regex: '[a-zA-Z0-9_\-\.]+'

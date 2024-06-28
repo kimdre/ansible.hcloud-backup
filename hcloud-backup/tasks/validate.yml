@@ -61,9 +61,9 @@
   assert:
     quiet: yes
     that:
-    - label_selector is string
-    # Regex for label selector format: key=value or key, separate multiple labels with a comma
-    - label_selector is match("^([a-zA-Z0-9_\-\.]+=[a-zA-Z0-9_\-\.]+)(,[a-zA-Z0-9_\-\.]+=[a-zA-Z0-9_\-\.]+)*$")
+      - label_selector is string
+      # Regex for label selector format: key=value or key, separate multiple labels with a comma
+      - label_selector is match("^([a-zA-Z0-9_\-\.]+=[a-zA-Z0-9_\-\.]+)(,[a-zA-Z0-9_\-\.]+=[a-zA-Z0-9_\-\.]+)*$")
     fail_msg: "Label selector not in correct format."
 
 - name: Check if labels in label_selector are in backup_labels
