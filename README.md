@@ -5,7 +5,7 @@ Ansible role to create and rotate backups and snapshots of servers in Hetzner Cl
 <!-- TOC -->
 * [Requirements](#requirements)
 * [Role Variables](#role-variables)
-  * [hcloud_token](#hcloud_token)
+  * [api_token](#api_token)
 * [Default Variables](#default-variables)
 * [Example Playbook](#example-playbook)
 * [Dependencies](#dependencies)
@@ -19,13 +19,13 @@ Ansible role to create and rotate backups and snapshots of servers in Hetzner Cl
 
 ## Role Variables
 
-### hcloud_token
+### api_token
 
 Hetzner Cloud API token.
 
 **Example**
 ```yaml
-hcloud_token: "your-hcloud-token"
+api_token: "your-hcloud-token"
 ```
 
 Can also be set as an environment variable `HCLOUD_TOKEN`
@@ -149,7 +149,7 @@ delegation: "{{ inventory_hostname }}"
   roles:
     - role: kimdre.hcloud-backup
       vars:
-        hcloud_token: "your-hcloud-token"
+        api_token: "your-hcloud-api-token"
         backup_type: "snapshot"
         keep_snapshots: 8
 ```
