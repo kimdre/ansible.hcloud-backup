@@ -1,11 +1,15 @@
 ---
 galaxy_info:
+  namespace: maki-it
+  role_name: hcloud-backup
   author: Kim Oliver Drechsel
-  description: Ansible role for Hetzner Cloud to create backups and snapshot of your servers
+  description: Ansible role for Hetzner Cloud to create and rotate backups and snapshots of your servers
   company: Maki IT
   license: Apache-2.0
+  min_ansible_version: 2.15
 
-  min_ansible_version: 2.1
+  dependencies:
+    - role: hetzner.hcloud
 
   platforms:
     - name: Fedora
