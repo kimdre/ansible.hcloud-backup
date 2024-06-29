@@ -40,11 +40,13 @@ all available variables.
 
 ### backup_type
 
-Type of backup to create. Can be `snapshot` or `backup`.
+Type of backup to create.
+
+#### Possible formats:
 
 - `snapshot` is generally cheaper with smaller servers and disk usage and there is no limit on the number of snapshots
-  that can be created
-- `backup` needs to be enabled first for the server and only 7 backups can be created per server
+  that can be created.
+- `backup` needs to be enabled first for the server and only 7 backups can be created per server before they get rotated.
 
 #### Default value
 
@@ -65,7 +67,11 @@ backup_description: "{{ inventory_hostname }} {{ now(fmt='%Y-%m-%d %H:%M:%S') }}
 ### backup_labels
 
 List of labels of the snapshot/backup.
-Format: `key: "value"` or `key: ""`  for labels without a value.
+
+#### Possible formats:
+
+- `key: "value"`
+- `key: ""`  for labels without a value.
 
 #### Default value
 
@@ -83,7 +89,10 @@ List of labels to identify snapshots for rotation, should overlap with [`backup_
 
 Only used when [`backup_type`](#backup_type) is set to `snapshot`.
 
-Format: `key: "value"` or `key: ""` for labels without a value
+#### Possible formats:
+
+- `key: "value"`
+- `key: ""`  for labels without a value.
 
 #### Default value
 
@@ -160,7 +169,7 @@ delegation: "{{ inventory_hostname }}"
       vars:
         api_token: "your-hcloud-api-token"
         backup_type: "snapshot"
-        keep_snapshots: 8
+        keep_snapshots: 7
 ```
 
 ## Dependencies
