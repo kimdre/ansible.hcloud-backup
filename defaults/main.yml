@@ -8,16 +8,20 @@ backup_type: 'snapshot'
 backup_description: "{{ inventory_hostname }} {{ now(fmt='%Y-%m-%d %H:%M:%S') }}"
 
 # List of labels of the snapshot/backup
-# Format: key: "value"
+# Format: key: "value" or key: "" for labels without a value
 backup_labels:
   created_by: "ansible.hcloud-backup"
-  host: "{{ inventory_hostname }}"
   created_at: "{{ now(fmt='%Y-%m-%d_%H-%M-%S') }}"
+  host: "{{ inventory_hostname }}"
+  rotation: "true"
 
-# Labels to identify a snapshots for rotation, should overlap with backup_labels
+# List of labels to identify snapshots for rotation, should overlap with backup_labels
 # Only used when backup_type is set to 'snapshot'
-# Format: 'key=value' or 'key', separate multiple labels with a comma
-label_selector: "created_by=ansible.hcloud-backup,host={{ inventory_hostname }}"
+# Format: key: "value" or key: "" for labels without a value
+label_selector:
+  created_by: ansible.hcloud-backup
+  host: "{{ inventory_hostname }}"
+  rotation: "true"
 
 # Rotate snapshots, if set to true, the oldest snapshot will be deleted
 # when the number of snapshots exceeds keep_snapshots.

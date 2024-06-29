@@ -1,14 +1,14 @@
 ---
-- name: 'Get all snapshots with labels: "{{ label_selector }}"'
+- name: 'Gather all snapshots with labels: "{{ label_selector }}"'
   delegate_to: "{{ delegation }}"
   register: response
   hetzner.hcloud.hcloud_image_info:
     api_token: "{{ api_token }}"
     type: snapshot
-    label_selector: "{{ label_selector }}"
+    label_selector: "{{ label_selector | items | map('join', '=') | join(',') }}"
   failed_when: response.hcloud_image_info | length == 0
 
-- name: Get snapshots to delete for {{ inventory_hostname }}
+- name: Gather snapshots to delete for {{ inventory_hostname }}
   delegate_to: "{{ delegation }}"
   set_fact:
     delete_list: "{{ response.hcloud_image_info[0:response.hcloud_image_info | length - keep_snapshots | int] }}"

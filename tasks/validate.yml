@@ -50,33 +50,37 @@
       - item.value is string
       - item.key != ""
       - item.key is match("^[a-zA-Z0-9_\-\.]+$")
-      - item.value is match("^[a-zA-Z0-9_\-\.]+$")
+      - item.value is match("^[a-zA-Z0-9_\-\.]+$") or item.value == ""
       - item.key | length < 64
       - item.value | length < 64
-    fail_msg: "Label key or value not in correct format."
+    fail_msg: "Label not in correct format."
 
-- name: Validate label selector
+- name: Validate label selectors
   delegate_to: "{{ delegation }}"
   when: backup_type == "snapshot"
+  loop: "{{ label_selector | dict2items }}"
   assert:
     quiet: yes
     that:
-      - label_selector is string
-      # Regex for label selector format: key=value or key, separate multiple labels with a comma
-      - label_selector is match("^([a-zA-Z0-9_\-\.]+=[a-zA-Z0-9_\-\.]+)(,[a-zA-Z0-9_\-\.]+=[a-zA-Z0-9_\-\.]+)*$")
+      - item.key is string
+      - item.value is string
+      - item.key != ""
+      - item.key is match("^[a-zA-Z0-9_\-\.]+$")
+      - item.value is match("^[a-zA-Z0-9_\-\.]+$")
+      - item.key | length < 64
+      - item.value | length < 64
     fail_msg: "Label selector not in correct format."
 
 - name: Validate if labels in label_selector are also in backup_labels
   delegate_to: "{{ delegation }}"
   when: backup_type == "snapshot"
+  loop: "{{ label_selector | dict2items }}"
   assert:
     quiet: yes
     that:
-      - label_selector.split(",") | map("split", "=") | map("first") | list | difference(backup_labels.keys() | list) == []
-      - label_selector.split(",") | map("split", "=") | map("first") | list | difference(backup_labels.keys() | list) | length == 0
-      - label_selector.split(",") | map("split", "=") | map("last") | list | difference(backup_labels.values() | list) == []
-      - label_selector.split(",") | map("split", "=") | map("last") | list | difference(backup_labels.values() | list) | length == 0
-    fail_msg: "label_selector contains labels that are not in backup_labels variable."
+      - item.key in backup_labels.keys()
+      - item.value == backup_labels[item.key]
+    fail_msg: "Could not find label_selector in backup_labels."
 
 - name: Check if backups are enabled on server
   when: backup_type == "backup"
