@@ -15,10 +15,6 @@ jobs:
     environment: Galaxy
     steps:
       - uses: actions/checkout@v4
-      - name: Show tags
-        run: |
-          echo "Tag name from GITHUB_REF_NAME: $GITHUB_REF_NAME"
-          echo "Tag name from github.ref_name: ${{  github.ref_name }}"
       - name: Publish Ansible role to Galaxy
         uses: robertdebock/galaxy-action@1.2.1
         with:
