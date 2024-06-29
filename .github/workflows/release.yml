@@ -9,7 +9,7 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    environment: galaxy
+    environment: Galaxy
     steps:
       - uses: actions/checkout@v4
       - name: Publish Ansible role to Galaxy
