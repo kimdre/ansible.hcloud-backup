@@ -7,6 +7,7 @@ Ansible role to create and rotate backups and snapshots of servers in Hetzner Cl
 <!-- TOC -->
 
 * [Requirements](#requirements)
+* [Dependencies](#dependencies)
 * [Role Variables](#role-variables)
     * [api_token](#api_token)
 * [Default Variables](#default-variables)
