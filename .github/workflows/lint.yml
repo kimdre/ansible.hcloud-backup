@@ -17,4 +17,7 @@ jobs:
             extends: default
             rules:
               line-length:
+                level: warning
                 max: 120
+              brackets:
+                max-spaces-inside: 1

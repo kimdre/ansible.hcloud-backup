@@ -3,14 +3,16 @@
 Ansible role to create and rotate backups and snapshots of servers in Hetzner Cloud.
 
 <!-- TOC -->
+
 * [Requirements](#requirements)
 * [Role Variables](#role-variables)
-  * [api_token](#api_token)
+    * [api_token](#api_token)
 * [Default Variables](#default-variables)
 * [Example Playbook](#example-playbook)
 * [Dependencies](#dependencies)
 * [License](#license)
 * [Author](#author)
+
 <!-- TOC -->
 
 ## Requirements
@@ -24,6 +26,7 @@ Ansible role to create and rotate backups and snapshots of servers in Hetzner Cl
 Hetzner Cloud API token.
 
 **Example**
+
 ```yaml
 api_token: "your-hcloud-token"
 ```
@@ -32,13 +35,15 @@ Can also be set as an environment variable `HCLOUD_TOKEN`
 
 ## Default Variables
 
-See [hcloud-backup/defaults/main.yml](https://github.com/kimdre/ansible.hcloud-backup/blob/main/defaults/main.yml) for all available variables.
+See [hcloud-backup/defaults/main.yml](https://github.com/kimdre/ansible.hcloud-backup/blob/main/defaults/main.yml) for
+all available variables.
 
 ### backup_type
 
 Type of backup to create. Can be `snapshot` or `backup`.
 
-- `snapshot` is generally cheaper with smaller servers and disk usage and there is no limit on the number of snapshots that can be created
+- `snapshot` is generally cheaper with smaller servers and disk usage and there is no limit on the number of snapshots
+  that can be created
 - `backup` needs to be enabled first for the server and only 7 backups can be created per server
 
 #### Default value
@@ -102,7 +107,7 @@ rotate_snapshots: true
 
 Number of snapshots to keep, older snapshots will be deleted.
 
-Only used when [`backup_type`](#backup_type) is set to `snapshot` 
+Only used when [`backup_type`](#backup_type) is set to `snapshot`
 and [`rotate_snapshots`](#rotate_snapshots) is set to `true`.
 
 #### Default value

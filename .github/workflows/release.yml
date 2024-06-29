@@ -16,4 +16,3 @@ jobs:
         uses: robertdebock/galaxy-action@1.2.1
         with:
           galaxy_api_key: ${{ secrets.ANSIBLE_GALAXY_TOKEN }}
-
