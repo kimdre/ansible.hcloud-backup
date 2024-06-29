@@ -5,7 +5,7 @@
 backup_type: 'snapshot'
 
 # Description of the snapshot/backup
-backup_description: "{{ inventory_hostname }} {{ now(fmt='%Y-%m-%d-%H:%M:%S') }}"
+backup_description: "{{ inventory_hostname }} {{ now(fmt='%Y-%m-%d %H:%M:%S') }}"
 
 # List of labels of the snapshot/backup
 # Format: key: "value"
