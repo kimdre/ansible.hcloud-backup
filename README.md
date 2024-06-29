@@ -189,10 +189,6 @@ delegation: "{{ inventory_hostname }}"
         keep_snapshots: 7
 ```
 
-## Dependencies
-
-- [hetzner.hcloud](https://galaxy.ansible.com/ui/repo/published/hetzner/hcloud/)
-
 ## License
 
 Apache-2.0
