@@ -1,4 +1,5 @@
 ---
+name: Publish Ansible role to Galaxy
 on:
   workflow_call:
 
