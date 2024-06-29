@@ -31,7 +31,7 @@ This role depends on the following collections and must be installed before usin
 ansible-galaxy collection install hetzner.hcloud
 ```
 
-Unfortunately, the ansible dependency system does not allow to roles 
+Unfortunately, the ansible dependency system does not allow roles to 
 depend on collections and vice versa even though it has been requested many times.
 Therefore, the collection has to be installed manually.
 
