@@ -29,4 +29,4 @@ galaxy_info:
         - all
 
 dependencies:
-  - role: hetzner.hcloud
+  - hetzner.hcloud: ">=4.0.1"
