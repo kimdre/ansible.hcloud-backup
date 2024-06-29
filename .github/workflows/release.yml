@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   push:
     tags:
-      - 'v*'
+      - 'v*.*.*'
 
 jobs:
   release:
@@ -15,7 +15,10 @@ jobs:
     environment: Galaxy
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Publish Ansible role to Galaxy
-        uses: robertdebock/galaxy-action@1.2.1
+        uses: ansible-actions/ansible-galaxy-action@v1.2.0
         with:
           galaxy_api_key: ${{ secrets.ANSIBLE_GALAXY_TOKEN }}
+          galaxy_version: ${{ github.ref }}
