@@ -1,4 +1,7 @@
-# hcloud-backup
+![Release version](https://img.shields.io/github/v/release/kimdre/ansible.hcloud-backup) (https://github.com/kimdre/ansible.hcloud-backup/releases)
+[![Publish Ansible role to Galaxy](https://github.com/kimdre/ansible.hcloud-backup/actions/workflows/release.yml/badge.svg)](https://github.com/kimdre/ansible.hcloud-backup/actions/workflows/release.yml)
+
+# Asible Role: kimdre.hcloud-backup
 
 Ansible role to create and rotate backups and snapshots of servers in Hetzner Cloud.
 
