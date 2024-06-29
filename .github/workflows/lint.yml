@@ -2,6 +2,7 @@
 name: Validate YAML Files
 on:
   workflow_call:
+  push:
 
 jobs:
   linter:
