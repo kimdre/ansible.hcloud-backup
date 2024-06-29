@@ -3,6 +3,9 @@ name: Publish Ansible role to Galaxy
 on:
   workflow_call:
   workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
 
 jobs:
   release:
