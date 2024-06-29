@@ -15,8 +15,10 @@ jobs:
     environment: Galaxy
     steps:
       - uses: actions/checkout@v4
+      - name: Show tags
+        run: echo "Publishing tag ${{ github.ref }} to Ansible Galaxy"
       - name: Publish Ansible role to Galaxy
-        uses: robertdebock/galaxy-action@1.2.1
+        uses: ansible-actions/ansible-galaxy-action@v1.2.0
         with:
           galaxy_api_key: ${{ secrets.ANSIBLE_GALAXY_TOKEN }}
-          git_branch: ${{ github.ref }}
+          galaxy_version: "${{ github.ref }}"
