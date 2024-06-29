@@ -1,5 +1,4 @@
 ![GitHub Release](https://img.shields.io/github/v/release/kimdre/ansible.hcloud-backup?logo=github&label=Galaxy%20version&link=https%3A%2F%2Fgithub.com%2Fkimdre%2Fansible.hcloud-backup%2Freleases)
-[![Publish Ansible role to Galaxy](https://github.com/kimdre/ansible.hcloud-backup/actions/workflows/release.yml/badge.svg)](https://github.com/kimdre/ansible.hcloud-backup/actions/workflows/release.yml)
 
 # Ansible Role: kimdre.hcloud-backup
 
