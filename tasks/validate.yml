@@ -77,3 +77,21 @@
       - label_selector.split(",") | map("split", "=") | map("last") | list | difference(backup_labels.values() | list) == []
       - label_selector.split(",") | map("split", "=") | map("last") | list | difference(backup_labels.values() | list) | length == 0
     fail_msg: "label_selector contains labels that are not in backup_labels variable."
+
+- name: Check if backups are enabled on server
+  when: backup_type == "backup"
+  block:
+    - name: Get server details
+      delegate_to: "{{ delegation }}"
+      register: server
+      hetzner.hcloud.server_info:
+        api_token: "{{ api_token }}"
+        name: "{{ inventory_hostname }}"
+
+    - name: Check if backups are enabled
+      delegate_to: "{{ delegation }}"
+      assert:
+        quiet: yes
+        that:
+          - server.hcloud_server_info[0].backup_window not in [None, ""]
+        fail_msg: "Backups are not enabled on this server."
