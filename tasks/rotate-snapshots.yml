@@ -28,17 +28,17 @@
   set_fact:
     # workaround for selecting only snapshots created from the current host because label_selector has some problems:
     # selectattr('created_from.name', 'equalto', inventory_hostname)
-    hcloud_image_info: "{{ response.results | map(attribute='json.images') | flatten | selectattr('created_from.name', 'equalto', inventory_hostname) }}"
+    images: "{{ response.results | map(attribute='json.images') | flatten | selectattr('created_from.name', 'equalto', inventory_hostname) }}"
 
 - name: Gather snapshots to delete
   delegate_to: "{{ delegation }}"
   set_fact:
-    delete_list: "{{ hcloud_image_info[0:hcloud_image_info | length - keep_snapshots | int] }}"
-  when: hcloud_image_info | length - keep_snapshots | int > 0
+    delete_list: "{{ images[0:images | length - keep_snapshots | int] }}"
+  when: images | length - keep_snapshots | int > 0
 
 - name: Show number of snapshots to delete
   debug:
-    msg: "{{ delete_list | length }} of {{ hcloud_image_info | length }} snapshots will be deleted"
+    msg: "{{ delete_list | length }} of {{ images | length }} snapshots will be deleted"
   when: delete_list | length > 0
 
 - name: "Delete old snapshots"
