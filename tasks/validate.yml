@@ -87,15 +87,20 @@
   block:
     - name: Get server details
       delegate_to: "{{ delegation }}"
-      register: server
-      hetzner.hcloud.server_info:
-        api_token: "{{ api_token }}"
-        name: "{{ inventory_hostname }}"
+      register: response
+      uri:
+        url: "https://api.hetzner.cloud/v1/servers?name={{ inventory_hostname }}"
+        method: GET
+        status_code: 200
+        headers:
+          Authorization: "Bearer {{ api_token }}"
+      failed_when:
+        - response.json.servers | length == 0
 
     - name: Check if backups are enabled
       delegate_to: "{{ delegation }}"
       assert:
         quiet: yes
         that:
-          - server.hcloud_server_info[0].backup_window not in [None, ""]
+          - response.json.servers.0.backup_window not in [None, ""]
         fail_msg: "Backups are not enabled on this server."

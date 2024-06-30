@@ -1,20 +1,47 @@
 ---
-- name: 'Gather all snapshots with labels: "{{ label_selector }}"'
+- name: Prepare label selector filter
+  set_fact:
+    label_selector_string: "{{ label_selector | items | map('join', '=') | join(',') }}"
+
+- name: Get number of pages for snapshots that match the label selector
   delegate_to: "{{ delegation }}"
   register: response
-  hetzner.hcloud.hcloud_image_info:
-    api_token: "{{ api_token }}"
-    type: snapshot
-    label_selector: "{{ label_selector | items | map('join', '=') | join(',') }}"
-  failed_when: response.hcloud_image_info | length == 0
+  uri:
+    url: "https://api.hetzner.cloud/v1/images?type=snapshot&per_page=50&status=available&label_selector={{ label_selector_string }}"
+    method: GET
+    status_code: 200
+    headers:
+      Authorization: "Bearer {{ api_token }}"
 
-- name: Gather snapshots to delete for {{ inventory_hostname }}
+- name: Gather all snapshots that match the label selector
+  delegate_to: "{{ delegation }}"
+  register: response
+  uri:
+    url: "https://api.hetzner.cloud/v1/images?type=snapshot&per_page=50&status=available&label_selector={{ label_selector_string }}&page={{ item }}"
+    method: GET
+    status_code: 200
+    headers:
+      Authorization: "Bearer {{ api_token }}"
+  loop: "{{ range(1, response.json.meta.pagination.last_page + 1) | list }}"
+
+- name: "Prepare list of snapshots"
+  set_fact:
+    # workaround for selecting only snapshots created from the current host because label_selector has some problems:
+    # selectattr('created_from.name', 'equalto', inventory_hostname)
+    images: "{{ response.results | map(attribute='json.images') | flatten | selectattr('created_from.name', 'equalto', inventory_hostname) }}"
+
+- name: Gather snapshots to delete
   delegate_to: "{{ delegation }}"
   set_fact:
-    delete_list: "{{ response.hcloud_image_info[0:response.hcloud_image_info | length - keep_snapshots | int] }}"
-  when: response.hcloud_image_info | length - keep_snapshots | int > 0
+    delete_list: "{{ images[0:images | length - keep_snapshots | int] }}"
+  when: images | length - keep_snapshots | int > 0
 
-- name: 'Delete {{ delete_list | length }} old snapshots for {{ inventory_hostname }}'
+- name: Show number of snapshots to delete
+  debug:
+    msg: "{{ delete_list | length }} of {{ images | length }} snapshots will be deleted"
+  when: delete_list | length > 0
+
+- name: "Delete old snapshots"
   delegate_to: "{{ delegation }}"
   when: delete_list | length > 0
   loop: "{{ delete_list }}"

@@ -2,7 +2,7 @@
 - name: Validate variables
   include_tasks: validate.yml
 
-- name: Create {{ backup_type }} for {{ inventory_hostname }}
+- name: Create {{ backup_type }}
   delegate_to: "{{ delegation }}"
   register: response
   uri:
@@ -16,7 +16,7 @@
     status_code: 201
     body_format: json
 
-- name: Wait until {{ backup_type }} is finished for {{ inventory_hostname }} with interval {{ backup_check_delay }}s
+- name: Wait until {{ backup_type }} is finished with interval {{ backup_check_delay }}s
   delegate_to: "{{ delegation }}"
   register: response
   uri:
@@ -31,6 +31,6 @@
   retries: "{{ backup_check_retries }}"
   delay: "{{ backup_check_delay }}"
 
-- name: Rotate snapshots for {{ inventory_hostname }}
+- name: Rotate snapshots
   when: backup_type == "snapshot" and rotate_snapshots == true
   include_tasks: rotate-snapshots.yml

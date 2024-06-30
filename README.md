@@ -7,12 +7,10 @@ Ansible role to create and rotate backups and snapshots of servers in Hetzner Cl
 <!-- TOC -->
 
 * [Requirements](#requirements)
-* [Dependencies](#dependencies)
 * [Role Variables](#role-variables)
     * [api_token](#api_token)
 * [Default Variables](#default-variables)
 * [Example Playbook](#example-playbook)
-* [Dependencies](#dependencies)
 * [License](#license)
 * [Author](#author)
 
@@ -21,20 +19,6 @@ Ansible role to create and rotate backups and snapshots of servers in Hetzner Cl
 ## Requirements
 
 - Ansible 2.15 or later
-
-## Dependencies
-
-This role depends on the following collections and must be installed before using this role:
-
-- [hetzner.hcloud](https://galaxy.ansible.com/ui/repo/published/hetzner/hcloud/)
-
-```bash
-ansible-galaxy collection install hetzner.hcloud
-```
-
-Unfortunately, the ansible dependency system does not allow roles to 
-depend on collections and vice versa even though it has been requested many times.
-Therefore, the collection has to be installed manually.
 
 ## Role Variables
 

@@ -28,7 +28,4 @@ galaxy_info:
       versions:
         - all
 
-#dependencies:
-#  - name: hetzner.hcloud
-#    src: hetzner.hcloud
-#    version: ">=4.0.1"
+dependencies: []
