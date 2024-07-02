@@ -1,0 +1,29 @@
+---
+- name: Create {{ backup_type }}
+  delegate_to: "{{ delegation }}"
+  register: response
+  uri:
+    url: "https://api.hetzner.cloud/v1/servers/{{ hostvars[inventory_hostname]['id'] }}/actions/create_image"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ api_token }}"
+      Content-Type: "application/json"
+    body: '{"description":"{{ backup_description }}","labels":{{ backup_labels | to_json }},"type":"{{ backup_type }}"}'
+    return_content: yes
+    status_code: 201
+    body_format: json
+
+- name: Wait until {{ backup_type }} is finished with interval {{ backup_check_delay }}s
+  delegate_to: "{{ delegation }}"
+  register: response
+  uri:
+    url: "https://api.hetzner.cloud/v1/images/{{ response.json.image.id }}/actions/{{ response.json.action.id }}"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ api_token }}"
+    return_content: yes
+    status_code: 200
+    body_format: json
+  until: response.json.action.progress == 100
+  retries: "{{ backup_check_retries }}"
+  delay: "{{ backup_check_delay }}"
