@@ -1,7 +1,7 @@
 ---
 - name: Prepare label selector filter
   set_fact:
-    label_selector_string: "{{ label_selector | items | map('join', '=') | join(',') }}"
+    label_selector_string: "{{ label_selector | items | map('join', '%3D') | join('%2C') }}"
 
 - name: Get number of pages for snapshots that match the label selector
   delegate_to: "{{ delegation }}"
@@ -26,8 +26,6 @@
 
 - name: "Prepare list of snapshots"
   set_fact:
-    # workaround for selecting only snapshots created from the current host because label_selector has some problems:
-    # selectattr('created_from.name', 'equalto', inventory_hostname)
     images: "{{ response.results | map(attribute='json.images') | flatten | selectattr('created_from.name', 'equalto', inventory_hostname) }}"
 
 - name: Gather snapshots to delete
