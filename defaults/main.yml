@@ -33,7 +33,7 @@ rotate_snapshots: true
 # Only used when backup_type is set to 'snapshot'
 keep_snapshots: 5
 
-# Delay in seconds between retries for the backup creation check
+# Number of retries for the backup creation check
 backup_check_retries: 40
 
 # Delay in seconds between retries for the backup creation
