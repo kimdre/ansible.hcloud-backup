@@ -3,8 +3,8 @@
     "extends": [
         "config:best-practices"
     ],
-    "dependencyDashboardLabels": ["dependencies"],
-    "labels": ["dependencies"],
+    "dependencyDashboardLabels": ["Kind/Dependency"],
+    "labels": ["Kind/Dependency"],
     "packageRules": [
         {
             "matchUpdateTypes": ["major"],
