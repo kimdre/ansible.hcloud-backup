@@ -7,7 +7,7 @@ backup_type: 'snapshot'
 # Description of the snapshot/backup
 backup_description: "{{ inventory_hostname }} {{ now(fmt='%Y-%m-%d %H:%M:%S') }}"
 
-# List of labels of the snapshot/backup
+# Dictionary of labels of the snapshot/backup
 # Format: key: "value" or key: "" for labels without a value
 backup_labels:
   created_by: "ansible.hcloud-backup"
@@ -15,15 +15,16 @@ backup_labels:
   host: "{{ inventory_hostname }}"
   rotation: "true"
 
-# List of labels to identify snapshots for rotation, should overlap with backup_labels
-# Only used when backup_type is set to 'snapshot'
-# Format: key: "value" or key: "" for labels without a value
+# Dictionary of labels to identify snapshots for rotation
+# Each key/value pair must also be in backup_labels
+# Only used when backup_type is set to 'snapshot' and rotate_snapshots is true
+# Format: key: "value". Values cannot be empty.
 label_selector:
   created_by: ansible.hcloud-backup
   host: "{{ inventory_hostname }}"
   rotation: "true"
 
-# Rotate snapshots, if set to true, the oldest snapshot will be deleted
+# Rotate snapshots, if set to true, the oldest snapshots will be deleted
 # when the number of snapshots exceeds keep_snapshots.
 # Only used when backup_type is set to 'snapshot'
 rotate_snapshots: true
@@ -42,8 +43,5 @@ backup_check_delay: 15
 # Host to run the role tasks from
 delegation: "{{ inventory_hostname }}"
 
-###
-# Do not edit/overwrite variables below this line
-delete_list: [ ]
-label_regex: '[a-zA-Z0-9_\-\.]+'
-api_token: "{{ lookup('env', 'HCLOUD_TOKEN', default=Undefined) }}"
+# Hetzner Cloud API token. Can be overridden with a role variable.
+api_token: "{{ lookup('ansible.builtin.env', 'HCLOUD_TOKEN') }}"

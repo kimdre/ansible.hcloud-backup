@@ -1,30 +1,41 @@
 ---
 - name: Create {{ backup_type }}
   delegate_to: "{{ delegation }}"
-  register: response
-  uri:
-    url: "https://api.hetzner.cloud/v1/servers/{{ hostvars[inventory_hostname]['id'] }}/actions/create_image"
+  register: hcloud_backup_created_image
+  no_log: true
+  changed_when: hcloud_backup_created_image is succeeded
+  ansible.builtin.uri:
+    url: "https://api.hetzner.cloud/v1/servers/{{ id | int }}/actions/create_image"
     method: POST
     headers:
       Authorization: "Bearer {{ api_token }}"
-      Content-Type: "application/json"
-    body: '{"description":"{{ backup_description }}","labels":{{ backup_labels | to_json }},"type":"{{ backup_type }}"}'
-    return_content: yes
+    body:
+      description: "{{ backup_description }}"
+      labels: "{{ backup_labels }}"
+      type: "{{ backup_type }}"
     status_code: 201
     body_format: json
 
 - name: Wait until {{ backup_type }} is finished with interval {{ backup_check_delay }}s
   delegate_to: "{{ delegation }}"
-  register: response
-  uri:
-    url: "https://api.hetzner.cloud/v1/actions/{{ response.json.action.id }}"
+  register: hcloud_backup_action
+  no_log: true
+  ansible.builtin.uri:
+    url: "https://api.hetzner.cloud/v1/actions/{{ hcloud_backup_created_image.json.action.id }}"
     method: GET
     headers:
       Authorization: "Bearer {{ api_token }}"
-    return_content: yes
     status_code: 200
-    body_format: json
-  until: response.json.action.progress == 100
-  failed_when: response.json.action.status == "error"
+  until: hcloud_backup_action is failed or hcloud_backup_action.json.action.status in ["success", "error"]
   retries: "{{ backup_check_retries }}"
   delay: "{{ backup_check_delay }}"
+
+- name: Check that {{ backup_type }} creation succeeded
+  no_log: true
+  ansible.builtin.assert:
+    quiet: true
+    that:
+      - hcloud_backup_action.json.action.status == "success"
+    fail_msg: >-
+      Backup creation failed: {{ (hcloud_backup_action.json.action.error.message
+      | default('Action did not succeed.')) | replace(api_token, '[redacted]') }}

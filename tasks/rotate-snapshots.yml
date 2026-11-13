@@ -1,49 +1,70 @@
 ---
 - name: Prepare label selector filter
-  set_fact:
-    label_selector_string: "{{ label_selector | items | map('join', '%3D') | join('%2C') }}"
+  ansible.builtin.set_fact:
+    hcloud_backup_label_selector: "{{ label_selector | dictsort | map('join', '=') | join(',') | urlencode }}"
 
-- name: Get number of pages for snapshots that match the label selector
+- name: Get first page of snapshots that match the label selector
   delegate_to: "{{ delegation }}"
-  register: response
-  uri:
-    url: "https://api.hetzner.cloud/v1/images?type=snapshot&per_page=50&status=available&label_selector={{ label_selector_string }}"
+  register: hcloud_backup_first_page
+  no_log: true
+  ansible.builtin.uri:
+    url: "https://api.hetzner.cloud/v1/images?type=snapshot&per_page=50&status=available&label_selector={{
+      hcloud_backup_label_selector }}&page=1"
     method: GET
     status_code: 200
     headers:
       Authorization: "Bearer {{ api_token }}"
 
-- name: Gather all snapshots that match the label selector
+- name: Validate snapshot pagination
+  ansible.builtin.assert:
+    quiet: true
+    that:
+      - hcloud_backup_first_page.json.meta.pagination.last_page is defined
+      - >-
+        hcloud_backup_first_page.json.meta.pagination.last_page is none or
+        (hcloud_backup_first_page.json.meta.pagination.last_page is integer and
+        hcloud_backup_first_page.json.meta.pagination.last_page >= 1)
+    fail_msg: "The snapshot API response did not contain valid pagination metadata."
+
+- name: Gather remaining pages of snapshots that match the label selector
   delegate_to: "{{ delegation }}"
-  register: response
-  uri:
-    url: "https://api.hetzner.cloud/v1/images?type=snapshot&per_page=50&status=available&label_selector={{ label_selector_string }}&page={{ item }}"
+  register: hcloud_backup_remaining_pages
+  no_log: true
+  ansible.builtin.uri:
+    url: "https://api.hetzner.cloud/v1/images?type=snapshot&per_page=50&status=available&label_selector={{
+      hcloud_backup_label_selector }}&page={{ item }}"
     method: GET
     status_code: 200
     headers:
       Authorization: "Bearer {{ api_token }}"
-  loop: "{{ range(1, response.json.meta.pagination.last_page + 1) | list }}"
+  loop: "{{ range(2, (hcloud_backup_first_page.json.meta.pagination.last_page
+    if hcloud_backup_first_page.json.meta.pagination.last_page is not none else 1) + 1) | list }}"
 
-- name: "Prepare list of snapshots"
-  set_fact:
-    images: "{{ response.results | map(attribute='json.images') | flatten | selectattr('created_from.name', 'equalto', inventory_hostname) }}"
+- name: Prepare list of snapshots in oldest-first order
+  ansible.builtin.set_fact:
+    hcloud_backup_images: "{{ (hcloud_backup_first_page.json.images
+      + (hcloud_backup_remaining_pages.results | map(attribute='json.images') | flatten))
+      | selectattr('created_from', 'mapping') | selectattr('created_from.id', 'defined')
+      | selectattr('created_from.id', 'equalto', id | int) | sort(attribute='id') | sort(attribute='created') }}"
 
 - name: Gather snapshots to delete
-  delegate_to: "{{ delegation }}"
-  set_fact:
-    delete_list: "{{ images[0:images | length - keep_snapshots | int] }}"
-  when: images | length - keep_snapshots | int > 0
+  ansible.builtin.set_fact:
+    hcloud_backup_delete_list: "{{ hcloud_backup_images[:[hcloud_backup_images | length - keep_snapshots, 0] | max] }}"
 
 - name: Show number of snapshots to delete
-  debug:
-    msg: "{{ delete_list | length }} of {{ images | length }} snapshots will be deleted"
-  when: delete_list | length > 0
+  ansible.builtin.debug:
+    msg: "{{ hcloud_backup_delete_list | length }} of {{ hcloud_backup_images | length }} snapshots will be deleted"
+  when: hcloud_backup_delete_list | length > 0
 
-- name: "Delete old snapshots"
+- name: Delete old snapshots
   delegate_to: "{{ delegation }}"
-  when: delete_list | length > 0
-  loop: "{{ delete_list }}"
-  uri:
+  register: hcloud_backup_deleted_image
+  loop: "{{ hcloud_backup_delete_list }}"
+  loop_control:
+    label: "{{ item.id }}"
+  no_log: true
+  changed_when: hcloud_backup_deleted_image is succeeded
+  ansible.builtin.uri:
     url: "https://api.hetzner.cloud/v1/images/{{ item.id }}"
     method: DELETE
     status_code: 204

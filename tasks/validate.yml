@@ -1,106 +1,137 @@
 ---
-# Validate variable inputs
 - name: Validate backup type
-  delegate_to: "{{ delegation }}"
-  assert:
-    quiet: yes
+  ansible.builtin.assert:
+    quiet: true
     that:
-      - backup_type == "snapshot" or backup_type == "backup"
+      - backup_type in ["snapshot", "backup"]
     fail_msg: "Backup type must be either 'snapshot' or 'backup'."
 
-- name: Validate api_token
-  delegate_to: "{{ delegation }}"
-  assert:
-    quiet: yes
+- name: Validate API token
+  no_log: true
+  ansible.builtin.assert:
+    quiet: true
     that:
       - api_token is defined
       - api_token is string
-      - api_token != ""
-    fail_msg: "Variable api_token must be a string and not empty."
+      - api_token | trim | length > 0
+    fail_msg: "Variable api_token must be a nonempty string."
+
+- name: Validate server ID
+  ansible.builtin.assert:
+    quiet: true
+    that:
+      - id is defined
+      - >-
+        (id is integer and id is not boolean) or
+        (id is string and id is regex('[1-9][0-9]*', match_type='fullmatch'))
+      - id | int > 0
+    fail_msg: "Host variable id must be a positive Hetzner Cloud server ID."
+
+- name: Validate backup description
+  ansible.builtin.assert:
+    quiet: true
+    that:
+      - backup_description is string
+    fail_msg: "Variable backup_description must be a string."
+
+- name: Validate snapshot rotation flag
+  ansible.builtin.assert:
+    quiet: true
+    that:
+      - rotate_snapshots is boolean
+    fail_msg: "Variable rotate_snapshots must be a boolean."
 
 - name: Validate number of snapshots to keep
-  delegate_to: "{{ delegation }}"
-  when: backup_type == "snapshot" and rotate_snapshots == true
-  assert:
-    quiet: yes
+  when: backup_type == "snapshot" and rotate_snapshots
+  ansible.builtin.assert:
+    quiet: true
     that:
       - keep_snapshots is integer
+      - keep_snapshots is not boolean
       - keep_snapshots >= 1
       - keep_snapshots <= 40
-    fail_msg: "Number of snapshots to keep must be between 1 and 40."
+    fail_msg: "Number of snapshots to keep must be an integer between 1 and 40."
 
 - name: Validate retries and delay
-  delegate_to: "{{ delegation }}"
-  assert:
-    quiet: yes
+  ansible.builtin.assert:
+    quiet: true
     that:
       - backup_check_retries is integer
+      - backup_check_retries is not boolean
       - backup_check_retries >= 0
       - backup_check_delay is integer
+      - backup_check_delay is not boolean
       - backup_check_delay >= 0
-    fail_msg: "Retries and delay must be positive integers."
+    fail_msg: "Retries and delay must be nonnegative integers."
+
+- name: Validate backup labels dictionary
+  ansible.builtin.assert:
+    quiet: true
+    that:
+      - backup_labels is mapping
+    fail_msg: "Variable backup_labels must be a dictionary."
 
 - name: Validate backup labels
-  delegate_to: "{{ delegation }}"
   loop: "{{ backup_labels | dict2items }}"
-  assert:
-    quiet: yes
+  vars:
+    # Name: 1 to 63 characters. Starts and ends with a letter or digit.
+    hcloud_backup_label_name: '[a-zA-Z0-9]([a-zA-Z0-9_.-]{0,61}[a-zA-Z0-9])?'
+    # Optional key prefix: DNS subdomain of 253 characters or less, then a slash.
+    hcloud_backup_label_prefix: >-
+      (?=[^/]{1,253}/)[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*/
+  ansible.builtin.assert:
+    quiet: true
     that:
       - item.key is string
       - item.value is string
-      - item.key != ""
-      - item.key is match("^[a-zA-Z0-9_\-\.]+$")
-      - item.value is match("^[a-zA-Z0-9_\-\.]+$") or item.value == ""
-      - item.key | length < 64
-      - item.value | length < 64
-    fail_msg: "Label not in correct format."
+      - item.key is regex('(' ~ hcloud_backup_label_prefix ~ ')?' ~ hcloud_backup_label_name, match_type='fullmatch')
+      - item.value == "" or item.value is regex(hcloud_backup_label_name, match_type='fullmatch')
+      - not item.key.lower().startswith('hetzner.cloud/')
+    fail_msg: >-
+      Labels must follow the Hetzner Cloud label rules. Names and values have 63 characters or less,
+      start and end with a letter or digit, and use only letters, digits, underscores, dots or hyphens.
+      Values can be empty. Keys can have a DNS subdomain prefix with a slash. The 'hetzner.cloud/' prefix is reserved.
 
-- name: Validate label selectors
-  delegate_to: "{{ delegation }}"
-  when: backup_type == "snapshot"
-  loop: "{{ label_selector | dict2items }}"
-  assert:
-    quiet: yes
-    that:
-      - item.key is string
-      - item.value is string
-      - item.key != ""
-      - item.key is match("^[a-zA-Z0-9_\-\.]+$")
-      - item.value is match("^[a-zA-Z0-9_\-\.]+$")
-      - item.key | length < 64
-      - item.value | length < 64
-    fail_msg: "Label selector not in correct format."
+- name: Validate snapshot label selectors
+  when: backup_type == "snapshot" and rotate_snapshots
+  block:
+    - name: Validate label selector dictionary
+      ansible.builtin.assert:
+        quiet: true
+        that:
+          - label_selector is mapping
+          - label_selector | length > 0
+        fail_msg: "Variable label_selector must be a nonempty dictionary when snapshot rotation is enabled."
 
-- name: Validate if labels in label_selector are also in backup_labels
-  delegate_to: "{{ delegation }}"
-  when: backup_type == "snapshot"
-  loop: "{{ label_selector | dict2items }}"
-  assert:
-    quiet: yes
-    that:
-      - item.key in backup_labels.keys()
-      - item.value == backup_labels[item.key]
-    fail_msg: "Could not find label_selector in backup_labels."
+    - name: Validate selectors match backup labels
+      loop: "{{ label_selector | dict2items }}"
+      ansible.builtin.assert:
+        quiet: true
+        that:
+          - item.key in backup_labels
+          - item.value == backup_labels[item.key]
+          - item.value | length > 0
+        fail_msg: >-
+          Each label selector must match a backup label, including its value.
+          Selector values cannot be empty because the API does not document 'key=' for empty values.
 
 - name: Check if backups are enabled on server
-  when: backup_type == "backup"
+  when: backup_type == "backup" and not ansible_check_mode
   block:
     - name: Get server details
       delegate_to: "{{ delegation }}"
-      register: response
-      uri:
-        url: "https://api.hetzner.cloud/v1/servers?name={{ inventory_hostname }}"
+      register: hcloud_backup_server
+      no_log: true
+      ansible.builtin.uri:
+        url: "https://api.hetzner.cloud/v1/servers/{{ id | int }}"
         method: GET
         status_code: 200
         headers:
           Authorization: "Bearer {{ api_token }}"
-      failed_when:
-        - response.json.servers | length == 0
 
     - name: Check if backups are enabled
-      delegate_to: "{{ delegation }}"
-      assert:
-        quiet: yes
+      ansible.builtin.assert:
+        quiet: true
         that:
-          - response.json.servers.0.backup_window not in [None, ""]
+          - hcloud_backup_server.json.server.backup_window not in [none, ""]
         fail_msg: "Backups are not enabled on this server."
