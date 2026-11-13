@@ -1,10 +1,27 @@
 ---
-- name: Validate variables
-  include_tasks: validate.yml
+- name: Run backup role
+  block:
+    - name: Validate variables
+      ansible.builtin.include_tasks: validate.yml
 
-- name: Create {{ backup_type }}
-  include_tasks: backup.yml
+    - name: Create {{ backup_type }}
+      when: not ansible_check_mode
+      ansible.builtin.include_tasks: backup.yml
 
-- name: Rotate snapshots
-  when: backup_type == "snapshot" and rotate_snapshots == true
-  include_tasks: rotate-snapshots.yml
+    - name: Rotate snapshots
+      when:
+        - not ansible_check_mode
+        - backup_type == "snapshot"
+        - rotate_snapshots
+      ansible.builtin.include_tasks: rotate-snapshots.yml
+  rescue:
+    - name: Report backup failure without exposing the API token
+      vars:
+        hcloud_backup_failure_message: "{{ ansible_failed_result.json.error.message
+          | default(ansible_failed_result.msg | default('The task did not complete.')) }}"
+      ansible.builtin.fail:
+        msg: >-
+          Task '{{ ansible_failed_task.name }}' failed{% if ansible_failed_result.status is defined %}
+          (HTTP {{ ansible_failed_result.status }}){% endif %}:
+          {{ hcloud_backup_failure_message | replace(api_token, '[redacted]')
+          if api_token is string and api_token | length > 0 else hcloud_backup_failure_message }}
