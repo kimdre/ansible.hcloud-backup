@@ -15,13 +15,20 @@
         - rotate_snapshots
       ansible.builtin.include_tasks: rotate-snapshots.yml
   rescue:
+    # Ansible sets ansible_failed_task and ansible_failed_result only on the host that failed.
+    # With any_errors_fatal or max_fail_percentage, other hosts also enter this rescue without them.
     - name: Report backup failure without exposing the API token
       vars:
-        hcloud_backup_failure_message: "{{ ansible_failed_result.json.error.message
-          | default(ansible_failed_result.msg | default('The task did not complete.')) }}"
+        hcloud_backup_failed_task: "{{ ansible_failed_task | default({}) }}"
+        hcloud_backup_failed_result: "{{ ansible_failed_result | default({}) }}"
+        hcloud_backup_failure_detail: "{{ hcloud_backup_failed_result.json.error.message
+          | default(hcloud_backup_failed_result.msg | default('The task did not complete.')) }}"
+        hcloud_backup_failure_message: >-
+          {% if hcloud_backup_failed_task.name is defined %}Task '{{ hcloud_backup_failed_task.name }}'
+          failed{% if hcloud_backup_failed_result.status is defined %}
+          (HTTP {{ hcloud_backup_failed_result.status }}){% endif %}: {{ hcloud_backup_failure_detail }}{% else -%}
+          The role stopped because another host failed and the play uses any_errors_fatal or max_fail_percentage.
+          Check the error of the other host. The backup or snapshot rotation on this host can be incomplete.{% endif %}
       ansible.builtin.fail:
-        msg: >-
-          Task '{{ ansible_failed_task.name }}' failed{% if ansible_failed_result.status is defined %}
-          (HTTP {{ ansible_failed_result.status }}){% endif %}:
-          {{ hcloud_backup_failure_message | replace(api_token, '[redacted]')
-          if api_token is string and api_token | length > 0 else hcloud_backup_failure_message }}
+        msg: "{{ hcloud_backup_failure_message | replace(api_token, '[redacted]')
+          if api_token is string and api_token | length > 0 else hcloud_backup_failure_message }}"

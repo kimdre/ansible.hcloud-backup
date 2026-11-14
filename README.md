@@ -167,11 +167,14 @@ keep_snapshots: 5
 Number of retries for the backup creation check, as a nonnegative integer.
 The role waits for the action status to become `success` and fails if it becomes `error`.
 A value of `0` checks the action once without retrying.
+The maximum wait time is about `backup_check_retries` x `backup_check_delay` seconds (30 minutes by default).
+If the action is still running after the last check, the role fails and does not rotate snapshots.
+Hetzner Cloud can still finish the image. Large disks can need more time.
 
 #### Default value
 
 ```yaml
-backup_check_retries: 40
+backup_check_retries: 120
 ```
 
 ### backup_check_delay

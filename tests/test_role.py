@@ -119,19 +119,22 @@ class RoleTests(unittest.TestCase):
             "retry_files_enabled = false\n"
         )
         self.inventory = self.work / "inventory.json"
-        self.inventory.write_text(json.dumps({
-            "all": {"hosts": {"inventory-alias": {
-                "ansible_connection": "local",
-                "ansible_python_interpreter": sys.executable,
-            }}}
-        }))
 
     def stop_server(self):
         self.server.shutdown()
         self.server.server_close()
         self.thread.join()
 
-    def run_role(self, variables=None, check=False, runs=None, missing_vars=(), verbose=False):
+    def run_role(self, variables=None, check=False, runs=None, missing_vars=(), verbose=False,
+                 hosts=None, play_options=None):
+        self.inventory.write_text(json.dumps({"all": {"hosts": {
+            name: {
+                "ansible_connection": "local",
+                "ansible_python_interpreter": sys.executable,
+                **host_vars,
+            }
+            for name, host_vars in (hosts or {"inventory-alias": {}}).items()
+        }}}))
         defaults = {
             "id": 1,
             "delegation": "localhost",
@@ -155,6 +158,7 @@ class RoleTests(unittest.TestCase):
             "gather_facts": False,
             "vars": defaults,
             "tasks": tasks,
+            **(play_options or {}),
         }]))
         env = os.environ.copy()
         env.update({
@@ -260,9 +264,27 @@ class RoleTests(unittest.TestCase):
 
     def test_running_action_exhausts_retries(self):
         self.api.statuses = ["running"]
+        self.api.progress = 42
         result = self.run_role()
         self.assert_failure(result)
         self.assertFalse(any("/v1/images" in target for _method, target, _body in self.api.requests))
+        polls = [target for method, target, _body in self.api.requests if "/actions/2000" in target]
+        self.assertEqual(len(polls), 3)
+        self.assertIn("still running after 3 status checks", result.stdout)
+        self.assertIn("progress 42%", result.stdout)
+        self.assertIn("Increase backup_check_retries", result.stdout)
+
+    def test_any_errors_fatal_reports_failure_on_other_hosts(self):
+        result = self.run_role(
+            missing_vars=["id"],
+            hosts={"inventory-alias": {"id": 1}, "other-host": {"id": 2}},
+            play_options={"any_errors_fatal": True},
+        )
+        self.assert_failure(result)
+        self.assertNotIn("is undefined", result.stdout)
+        self.assertIn("HTTP 404", result.stdout)
+        self.assertIn("unexpected API request", result.stdout)
+        self.assertFalse(any("/actions/2000" in target for _method, target, _body in self.api.requests))
 
     def test_http_failures_stop_before_deletion(self):
         for method, path in [
@@ -309,7 +331,9 @@ class RoleTests(unittest.TestCase):
 
     def test_successful_http_response_without_action_fails(self):
         self.api.failures = {("GET", "/v1/actions/2000"): (200, {})}
-        self.assert_failure(self.run_role())
+        result = self.run_role()
+        self.assert_failure(result)
+        self.assertIn("has no action status", result.stdout)
 
     def test_disabled_backups_use_server_id_and_stop(self):
         self.api.backup_window = None
