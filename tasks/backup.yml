@@ -26,16 +26,44 @@
     headers:
       Authorization: "Bearer {{ api_token }}"
     status_code: 200
-  until: hcloud_backup_action is failed or hcloud_backup_action.json.action.status in ["success", "error"]
+  # Ansible marks the result as failed when all retries are used, even with failed_when.
+  # The next tasks check the result and give a clear error message for each failure type.
+  ignore_errors: true
+  until: >-
+    hcloud_backup_action is failed
+    or (hcloud_backup_action.json.action.status | default('')) != "running"
   retries: "{{ backup_check_retries }}"
   delay: "{{ backup_check_delay }}"
 
-- name: Check that {{ backup_type }} creation succeeded
+- name: Check the {{ backup_type }} status response
+  when: hcloud_backup_action.json.action.status is not defined
   no_log: true
-  ansible.builtin.assert:
-    quiet: true
-    that:
-      - hcloud_backup_action.json.action.status == "success"
-    fail_msg: >-
-      Backup creation failed: {{ (hcloud_backup_action.json.action.error.message
-      | default('Action did not succeed.')) | replace(api_token, '[redacted]') }}
+  vars:
+    hcloud_backup_status_error: >-
+      {{ hcloud_backup_action.json.error.message
+      | default('The response has no action status.' if (hcloud_backup_action.status | default(0)) == 200
+      else hcloud_backup_action.msg | default('The request did not complete.')) }}
+  ansible.builtin.fail:
+    msg: >-
+      The {{ backup_type }} status check failed (HTTP {{ hcloud_backup_action.status | default('unknown') }}):
+      {{ hcloud_backup_status_error | replace(api_token, '[redacted]') }}
+
+- name: Check that {{ backup_type }} creation finished in time
+  when: hcloud_backup_action.json.action.status == "running"
+  no_log: true
+  ansible.builtin.fail:
+    msg: >-
+      The {{ backup_type }} is still running after {{ backup_check_retries + 1 }} status checks
+      in about {{ backup_check_retries * backup_check_delay }} seconds
+      (progress {{ hcloud_backup_action.json.action.progress | default('unknown') }}%).
+      Hetzner Cloud can still finish the {{ backup_type }}, but the role stopped and did not run the remaining steps.
+      Increase backup_check_retries or backup_check_delay to wait longer.
+
+- name: Check that {{ backup_type }} creation succeeded
+  when: hcloud_backup_action.json.action.status != "success"
+  no_log: true
+  ansible.builtin.fail:
+    msg: >-
+      The {{ backup_type }} creation failed with action status '{{ hcloud_backup_action.json.action.status }}':
+      {{ (hcloud_backup_action.json.action.error.message | default('No error message.'))
+      | replace(api_token, '[redacted]') }}

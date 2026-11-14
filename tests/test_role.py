@@ -264,9 +264,15 @@ class RoleTests(unittest.TestCase):
 
     def test_running_action_exhausts_retries(self):
         self.api.statuses = ["running"]
+        self.api.progress = 42
         result = self.run_role()
         self.assert_failure(result)
         self.assertFalse(any("/v1/images" in target for _method, target, _body in self.api.requests))
+        polls = [target for method, target, _body in self.api.requests if "/actions/2000" in target]
+        self.assertEqual(len(polls), 3)
+        self.assertIn("still running after 3 status checks", result.stdout)
+        self.assertIn("progress 42%", result.stdout)
+        self.assertIn("Increase backup_check_retries", result.stdout)
 
     def test_any_errors_fatal_reports_failure_on_other_hosts(self):
         result = self.run_role(
@@ -326,7 +332,9 @@ class RoleTests(unittest.TestCase):
 
     def test_successful_http_response_without_action_fails(self):
         self.api.failures = {("GET", "/v1/actions/2000"): (200, {})}
-        self.assert_failure(self.run_role())
+        result = self.run_role()
+        self.assert_failure(result)
+        self.assertIn("has no action status", result.stdout)
 
     def test_disabled_backups_use_server_id_and_stop(self):
         self.api.backup_window = None
