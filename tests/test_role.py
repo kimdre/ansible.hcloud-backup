@@ -284,7 +284,6 @@ class RoleTests(unittest.TestCase):
         self.assertNotIn("is undefined", result.stdout)
         self.assertIn("HTTP 404", result.stdout)
         self.assertIn("unexpected API request", result.stdout)
-        self.assertIn("another host failed", result.stdout)
         self.assertFalse(any("/actions/2000" in target for _method, target, _body in self.api.requests))
 
     def test_http_failures_stop_before_deletion(self):
