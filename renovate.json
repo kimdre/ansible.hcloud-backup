@@ -3,7 +3,9 @@
     "extends": [
         "config:best-practices"
     ],
-    "dependencyDashboardLabels": ["Kind/Dependency"],
+    "dependencyDashboard": {
+        "labels": ["Kind/Dependency"]
+    },
     "labels": ["Kind/Dependency"],
     "packageRules": [
         {
